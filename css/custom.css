@@ -1,0 +1,13 @@
+.input-field:not(:first-child) input,
+.input-field:not(:first-child) input + span {
+    color: #e0e0e0 !important;
+}
+
+.input-field:not(:first-child) input {
+    border-bottom: 1px dotted #505050 !important;
+}
+
+.input-field .counter {
+    float: right;
+    font-size: 13px;
+}

@@ -56,7 +56,7 @@ var Uuid = {
     b64list: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
     compress: function (str) {
         var s = str.replace(/-/g, "").toLowerCase();
-        if (s.match(/[0-9a-f]{32}/) === null) {
+        if (s.match(/^[0-9a-f]{32}$/) === null) {
             return "";
         }
 

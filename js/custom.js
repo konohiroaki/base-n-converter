@@ -2,18 +2,19 @@ var app = new Vue({
     el: '#app',
     data: {
         txt: [{title: "Input Here", value: "", count: 0},
-            {title: "URL Encode", value: "", count: 0}, {title: "URL Decode", value: "", count: 0},
-            {title: "Base64 Encode", value: "", count: 0}, {title: "Base64 Decode", value: "", count: 0},
-            {title: "Base64 to UUID", value: "", count: 0}, {title: "UUID to Base64", value: "", count: 0}]
+            {title: "Base64 to Base32", value: "", count: 0}, {title: "Base32 to Base64", value: "", count: 0},
+            {title: "Base64 to Base16", value: "", count: 0}, {title: "Base16 to Base64", value: "", count: 0},
+            {title: "Base32 to Base16", value: "", count: 0}, {title: "Base16 to Base32", value: "", count: 0}
+        ]
     },
     methods: {
         update: function () {
-            this.txt[1].value = encodeURI(this.txt[0].value);
-            this.txt[2].value = decodeURI(this.txt[0].value);
-            this.txt[3].value = Base64.encode(this.txt[0].value);
-            this.txt[4].value = Base64.decode(this.txt[0].value);
-            this.txt[5].value = Uuid.expand(this.txt[0].value);
-            this.txt[6].value = Uuid.compress(this.txt[0].value);
+            this.txt[1].value = Base64.toBase32(this.txt[0].value);
+            // this.txt[2].value = Base32.toBase64(this.txt[0].value);
+            this.txt[3].value = Base64.toBase16(this.txt[0].value);
+            // this.txt[4].value = Base16.toBase64(this.txt[0].value);
+            // this.txt[5].value = Base32.toBase16(this.txt[0].value);
+            // this.txt[6].value = Base16.toBase32(this.txt[0].value);
             CharCounter.updateCounter();
         }
     }
@@ -27,61 +28,77 @@ var CharCounter = {
     }
 };
 
-/**
- * https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding#The_Unicode_Problem
- */
 var Base64 = {
-    encode: function (str) {
-        return window.btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-            function toSolidBytes(match, p1) {
-                return String.fromCharCode('0x' + p1);
-            }));
+    // 000000 - 111111
+    list: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+
+    toBase32: function (b64) {
+        var b2 = Base64.toBase2(b64);
+        var arr = b2.match(/.{1,5}/g) || [];
+        var b32 = "";
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i].length !== 5) {
+                arr[i] += Array(5 - arr[i].length).fill("0").join("");
+            }
+            b32 += Base32.list[parseInt(arr[i], 2)];
+        }
+        if (b2.length % 40 !== 0) {
+            var lack = 8 - Math.ceil((b2.length % 40) / 5);
+            b32 += Array(lack).fill("=").join("");
+        }
+        return b32;
     },
-    decode: function (str) {
-        try {
-            return decodeURIComponent(window.atob(str).split('').map(function (c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-        } catch (e) {
+    toBase16: function (b64) {
+        var b2 = Base64.toBase2(b64);
+        var arr = b2.match(/.{4}/g) || []; // always length % 4 -> 0
+        var b16 = "";
+        for (var i = 0; i < arr.length; i++) {
+            b16 += Base16.list[parseInt(arr[i], 2)];
+        }
+        return b16;
+    },
+    toBase2: function (b64) {
+        b64 = Base64.sanitize(b64);
+        if (!b64) {
             return "";
         }
+        var b2 = "";
+        for (var i = 0; i < b64.length; i++) {
+            if (b64[i] === "=") {
+                b2 = b2.slice(0, -2);
+                continue;
+            }
+            var tmp = Base64.list.indexOf(b64[i]).toString(2);
+            b2 += ("00000" + tmp).slice(-6);
+        }
+        return b2;
+    },
+    sanitize: function (b64) {
+        b64 = b64.replace(/[-]/g, "");
+        return b64.match(/^[A-Za-z0-9+\/=]+$/) !== null ? b64 : false;
     }
 };
 
-var Uuid = {
-    /**
-     * https://stackoverflow.com/a/9998010/6642042
-     */
-    hexlist: '0123456789abcdef',
-    b64list: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
-    compress: function (str) {
-        var s = str.replace(/-/g, "").toLowerCase();
-        if (s.match(/^[0-9a-f]{32}$/) === null) {
-            return "";
-        }
+var Base32 = {
+    // 00000 - 11111
+    list: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=",
 
-        var a, p, q;
-        var r = "";
-        var i = 0;
-        while (i < s.length) {
-            a = (Uuid.hexlist.indexOf(s.charAt(i++)) << 8) |
-                (Uuid.hexlist.indexOf(s.charAt(i++)) << 4) |
-                (Uuid.hexlist.indexOf(s.charAt(i++)));
-
-            p = a >> 6;
-            q = a & 63;
-
-            r += Uuid.b64list.charAt(p) + Uuid.b64list.charAt(q);
-        }
-        r += "==";
-        return r;
+    toBase64: function (str) {
     },
-    expand: function (str) {
-        var s = str.replace(/=/g, "");
-        if (s.length !== 22) {
-            return "";
-        }
+    toBase16: function (str) {
+    },
+    toBase2: function (str) {
+    }
+};
 
-        return "not yet implemented";
+var Base16 = {
+    // 0000 - 1111
+    list: "0123456789abcdef",
+
+    toBase64: function (r16) {
+    },
+    toBase32: function (r16) {
+    },
+    toBase2: function (r16) {
     }
 };

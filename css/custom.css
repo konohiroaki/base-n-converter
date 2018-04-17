@@ -11,3 +11,7 @@
     float: right;
     font-size: 13px;
 }
+
+.input-field input {
+    font-family: "Courier New", monospace;
+}

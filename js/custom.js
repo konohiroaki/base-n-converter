@@ -1,20 +1,26 @@
 var app = new Vue({
     el: '#app',
     data: {
-        txt: [{title: "Input Here", value: "", count: 0},
-            {title: "Base64 to Base32", value: "", count: 0}, {title: "Base32 to Base64", value: "", count: 0},
-            {title: "Base64 to Base16", value: "", count: 0}, {title: "Base16 to Base64", value: "", count: 0},
-            {title: "Base32 to Base16", value: "", count: 0}, {title: "Base16 to Base32", value: "", count: 0}
-        ]
+        input: {title: "Input Here", value: "", count: 0},
+        output: [{
+            title: "As Base64",
+            to: [{title: "to Base32", value: "", count: 0}, {title: "to Base16", value: "", count: 0}]
+        }, {
+            title: "As Base32",
+            to: [{title: "to Base64", value: "", count: 0}, {title: "to Base16", value: "", count: 0}]
+        }, {
+            title: "As Base16",
+            to: [{title: "to Base64", value: "", count: 0}, {title: "to Base32", value: "", count: 0}]
+        }]
     },
     methods: {
         update: function () {
-            this.txt[1].value = BaseN.toBaseN(this.txt[0].value, BaseN.b64, BaseN.b32);
-            this.txt[2].value = BaseN.toBaseN(this.txt[0].value, BaseN.b32, BaseN.b64);
-            this.txt[3].value = BaseN.toBaseN(this.txt[0].value, BaseN.b64, BaseN.b16);
-            this.txt[4].value = BaseN.toBaseN(this.txt[0].value, BaseN.b16, BaseN.b64);
-            this.txt[5].value = BaseN.toBaseN(this.txt[0].value, BaseN.b32, BaseN.b16);
-            this.txt[6].value = BaseN.toBaseN(this.txt[0].value, BaseN.b16, BaseN.b32);
+            this.output[0].to[0].value = BaseN.toBaseN(this.input.value, BaseN.b64, BaseN.b32);
+            this.output[0].to[1].value = BaseN.toBaseN(this.input.value, BaseN.b64, BaseN.b16);
+            this.output[1].to[0].value = BaseN.toBaseN(this.input.value, BaseN.b32, BaseN.b64);
+            this.output[1].to[1].value = BaseN.toBaseN(this.input.value, BaseN.b32, BaseN.b16);
+            this.output[2].to[0].value = BaseN.toBaseN(this.input.value, BaseN.b16, BaseN.b64);
+            this.output[2].to[1].value = BaseN.toBaseN(this.input.value, BaseN.b16, BaseN.b32);
             CharCounter.updateCounter();
         }
     }
@@ -22,8 +28,11 @@ var app = new Vue({
 
 var CharCounter = {
     updateCounter: function () {
-        app.txt.forEach(function (e) {
-            e.count = e.value.length;
+        app.input.count = app.input.value.length;
+        app.output.forEach(function (e) {
+            e.to.forEach(function (ee) {
+                ee.count = ee.value.length;
+            });
         });
     }
 };

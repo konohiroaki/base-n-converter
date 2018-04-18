@@ -9,12 +9,12 @@ var app = new Vue({
     },
     methods: {
         update: function () {
-            this.txt[1].value = Base64.toBase32(this.txt[0].value);
-            // this.txt[2].value = Base32.toBase64(this.txt[0].value);
-            this.txt[3].value = Base64.toBase16(this.txt[0].value);
-            // this.txt[4].value = Base16.toBase64(this.txt[0].value);
-            // this.txt[5].value = Base32.toBase16(this.txt[0].value);
-            // this.txt[6].value = Base16.toBase32(this.txt[0].value);
+            this.txt[1].value = BaseN.toBaseN(this.txt[0].value, BaseN.b64, BaseN.b32);
+            this.txt[2].value = BaseN.toBaseN(this.txt[0].value, BaseN.b32, BaseN.b64);
+            this.txt[3].value = BaseN.toBaseN(this.txt[0].value, BaseN.b64, BaseN.b16);
+            this.txt[4].value = BaseN.toBaseN(this.txt[0].value, BaseN.b16, BaseN.b64);
+            this.txt[5].value = BaseN.toBaseN(this.txt[0].value, BaseN.b32, BaseN.b16);
+            this.txt[6].value = BaseN.toBaseN(this.txt[0].value, BaseN.b16, BaseN.b32);
             CharCounter.updateCounter();
         }
     }
@@ -32,80 +32,63 @@ var CharCounter = {
  * https://tools.ietf.org/html/rfc4648
  */
 
-var Base64 = {
-    // 000000 - 111111
-    list: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
-
-    toBase32: function (b64) {
-        var b2 = Base64.toBase2(b64);
-        var arr = b2.match(/.{1,40}/g) || []; // b2 length always 8 * n.
-        var b32 = "";
-        var chars = 8;
-        for (var i = 0; i < arr.length; i++) {
-            if (arr[i].length !== 40) {
-                if (arr[i].length % 5 !== 0) {
-                    arr[i] += Array(5 - arr[i].length % 5).fill("0").join("");
-                }
-                chars = arr[i].length / 5;
-            }
-            for (var j = 0; j < chars; j++) {
-                b32 += Base32.list[parseInt(arr[i].slice(5 * j, 5 * (j + 1)), 2)];
-            }
+var BaseN = {
+    b64: {
+        list: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+        chars: 4, bits: 6,
+        toBin: function (b64) {
+            b64 = b64.length % BaseN.b64.chars === 0
+                  && b64.match(/^[A-Za-z0-9+\/]+={0,2}$/) !== null ? b64 : "";
+            return BaseN.toBin(b64.replace(/=/g, ""), BaseN.b64);
         }
-        b32 += Array(8 - chars).fill("=").join("");
-        return b32;
     },
-    toBase16: function (b64) {
-        var b2 = Base64.toBase2(b64);
-        var arr = b2.match(/.{8}/g) || []; // b2 length always 8 * n.
-        var b16 = "";
-        for (var i = 0; i < arr.length; i++) {
-            for (var j = 0; j < 2; j++) {
-                b16 += Base16.list[parseInt(arr[i].slice(4 * j, 4 * (j + 1)), 2)];
-            }
+    b32: {
+        list: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
+        chars: 8, bits: 5,
+        toBin: function (b32) {
+            b32 = b32.toUpperCase();
+            b32 = b32.length % BaseN.b32.chars === 0
+                  && b32.match(/^[A-Z2-7]+={0,6}$/) !== null ? b32 : "";
+            return BaseN.toBin(b32.replace(/=/g, ""), BaseN.b32);
         }
-        return b16;
     },
-    toBase2: function (b64) {
-        b64 = Base64.sanitize(b64);
+    b16: {
+        list: "0123456789abcdef",
+        chars: 2, bits: 4,
+        toBin: function (b16) {
+            b16 = b16.replace(/[-:]/g, "").toLowerCase();
+            b16 = b16.length % BaseN.b16.chars === 0
+                  && b16.match(/^[0-9a-f]+$/) !== null ? b16 : "";
+            return BaseN.toBin(b16, BaseN.b16);
+        }
+    },
+    toBin: function (code, n) {
         var b2 = "";
-        for (var i = 0; i < b64.replace(/=/g, "").length; i++) {
-            var tmp = Base64.list.indexOf(b64[i]).toString(2);
-            b2 += ("00000" + tmp).slice(-6);
+        for (var i = 0; i < code.length; i++) {
+            var tmp = n.list.indexOf(code[i]).toString(2);
+            b2 += (Array(n.bits - 1).fill("0").join("") + tmp).slice(-n.bits);
         }
         b2 = b2.slice(0, b2.length - b2.length % 8); // fix length to 8 * n.
         return b2;
     },
-    sanitize: function (b64) {
-        return b64.length % 4 === 0
-               && b64.match(/^[A-Za-z0-9+\/]+={0,2}$/) !== null ? b64 : "";
-    }
-};
-
-var Base32 = {
-    // 00000 - 11111
-    list: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
-
-    toBase64: function (b32) {
-    },
-    toBase16: function (b32) {
-    },
-    toBase2: function (b32) {
-    }
-};
-
-var Base16 = {
-    // 0000 - 1111
-    list: "0123456789abcdef",
-
-    toBase64: function (b16) {
-    },
-    toBase32: function (b16) {
-    },
-    toBase2: function (b16) {
-    },
-    sanitize: function (b16) {
-        b16 = b16.replace(/[-:]/g, "").toLowerCase();
-        return b16.match(/^[0-9a-f]+$/) !== null ? b16 : "";
+    toBaseN: function (code, fromN, toN) {
+        var binary = fromN.toBin(code);
+        var groupBits = toN.chars * toN.bits;
+        var arr = binary.match(new RegExp(".{1," + groupBits + "}", "g")) || [];
+        var baseN = "";
+        var chr = toN.chars;
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i].length !== groupBits) {
+                if (arr[i].length % toN.bits !== 0) {
+                    arr[i] += Array(toN.bits - arr[i].length % toN.bits).fill("0").join("");
+                }
+                chr = arr[i].length / toN.bits;
+            }
+            for (var j = 0; j < chr; j++) {
+                baseN += toN.list[parseInt(arr[i].slice(toN.bits * j, toN.bits * (j + 1)), 2)];
+            }
+        }
+        baseN += Array(toN.chars - chr).fill("=").join("");
+        return baseN;
     }
 };

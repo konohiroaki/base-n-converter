@@ -21,18 +21,14 @@
             <input type="text" :title="input.title" v-model="input.value" @input="update">
             <span class="counter">{{input.count}}</span>
         </div>
-        <template v-for="(v, k) in output">
-            <div class="col s4">
-                <div class="grey-text">{{v.title}}</div>
-                <template v-for="(vv, kk) in v.to">
-                    <div class="input-field inline col s12">
-                        <span class="grey-text">{{vv.title}}</span>
-                        <input type="text" :title="vv.title" v-model="vv.value" readonly>
-                        <span class="counter">{{vv.count}}</span>
-                    </div>
-                </template>
+        <div v-for="(v, k) in output" class="col s4">
+            <div class="grey-text">{{v.title}}</div>
+            <div v-for="(vv, kk) in v.to" class="input-field inline col s12">
+                <span class="grey-text">{{vv.title}}</span>
+                <input type="text" :title="vv.title" v-model="vv.value" readonly>
+                <span class="counter">{{vv.count}}</span>
             </div>
-        </template>
+        </div>
     </div>
 </main>
 

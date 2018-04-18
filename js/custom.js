@@ -28,66 +28,69 @@ var CharCounter = {
     }
 };
 
+/**
+ * https://tools.ietf.org/html/rfc4648
+ */
+
 var Base64 = {
     // 000000 - 111111
-    list: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+    list: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
 
     toBase32: function (b64) {
         var b2 = Base64.toBase2(b64);
-        var arr = b2.match(/.{1,5}/g) || [];
+        var arr = b2.match(/.{1,40}/g) || []; // b2 length always 8 * n.
         var b32 = "";
+        var chars = 8;
         for (var i = 0; i < arr.length; i++) {
-            if (arr[i].length !== 5) {
-                arr[i] += Array(5 - arr[i].length).fill("0").join("");
+            if (arr[i].length !== 40) {
+                if (arr[i].length % 5 !== 0) {
+                    arr[i] += Array(5 - arr[i].length % 5).fill("0").join("");
+                }
+                chars = arr[i].length / 5;
             }
-            b32 += Base32.list[parseInt(arr[i], 2)];
+            for (var j = 0; j < chars; j++) {
+                b32 += Base32.list[parseInt(arr[i].slice(5 * j, 5 * (j + 1)), 2)];
+            }
         }
-        if (b2.length % 40 !== 0) {
-            var lack = 8 - Math.ceil((b2.length % 40) / 5);
-            b32 += Array(lack).fill("=").join("");
-        }
+        b32 += Array(8 - chars).fill("=").join("");
         return b32;
     },
     toBase16: function (b64) {
         var b2 = Base64.toBase2(b64);
-        var arr = b2.match(/.{4}/g) || []; // always length % 4 -> 0
+        var arr = b2.match(/.{8}/g) || []; // b2 length always 8 * n.
         var b16 = "";
         for (var i = 0; i < arr.length; i++) {
-            b16 += Base16.list[parseInt(arr[i], 2)];
+            for (var j = 0; j < 2; j++) {
+                b16 += Base16.list[parseInt(arr[i].slice(4 * j, 4 * (j + 1)), 2)];
+            }
         }
         return b16;
     },
     toBase2: function (b64) {
         b64 = Base64.sanitize(b64);
-        if (!b64) {
-            return "";
-        }
         var b2 = "";
-        for (var i = 0; i < b64.length; i++) {
-            if (b64[i] === "=") {
-                b2 = b2.slice(0, -2);
-                continue;
-            }
+        for (var i = 0; i < b64.replace(/=/g, "").length; i++) {
             var tmp = Base64.list.indexOf(b64[i]).toString(2);
             b2 += ("00000" + tmp).slice(-6);
         }
+        b2 = b2.slice(0, b2.length - b2.length % 8); // fix length to 8 * n.
         return b2;
     },
     sanitize: function (b64) {
-        b64 = b64.replace(/[-]/g, "");
-        return b64.match(/^[A-Za-z0-9+\/=]+$/) !== null ? b64 : false;
+        return b64.length % 4 === 0
+               && b64.match(/^[A-Za-z0-9+\/]+={0,2}$/) !== null ? b64 : "";
     }
 };
 
 var Base32 = {
     // 00000 - 11111
-    list: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=",
+    list: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
 
-    toBase64: function (str) {
+    toBase64: function (b32) {
     },
-    toBase16: function (str) {
+    toBase16: function (b32) {
     },
-    toBase2: function (str) {
+    toBase2: function (b32) {
     }
 };
 
@@ -95,10 +98,14 @@ var Base16 = {
     // 0000 - 1111
     list: "0123456789abcdef",
 
-    toBase64: function (r16) {
+    toBase64: function (b16) {
     },
-    toBase32: function (r16) {
+    toBase32: function (b16) {
     },
-    toBase2: function (r16) {
+    toBase2: function (b16) {
+    },
+    sanitize: function (b16) {
+        b16 = b16.replace(/[-:]/g, "").toLowerCase();
+        return b16.match(/^[0-9a-f]+$/) !== null ? b16 : "";
     }
 };

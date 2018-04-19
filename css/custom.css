@@ -1,5 +1,6 @@
 .input-field:not(:first-child) input,
-.input-field:not(:first-child) input + span {
+.input-field:not(:first-child) input + span,
+footer i {
     color: #e0e0e0 !important;
 }
 

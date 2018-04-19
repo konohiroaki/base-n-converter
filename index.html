@@ -27,7 +27,7 @@
     </div>
     <div class="row">
         <div v-for="(v, k) in output" class="col s4">
-            <div class="grey-text">{{v.title}}</div>
+            <h6 class="grey-text">{{v.title}}</h6>
             <div v-for="(vv, kk) in v.to" class="input-field inline col s12">
                 <span class="grey-text">{{vv.title}}</span>
                 <input type="text" :title="vv.title" v-model="vv.value" readonly>

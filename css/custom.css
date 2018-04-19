@@ -16,3 +16,7 @@ footer i {
 .input-field input {
     font-family: "Courier New", monospace;
 }
+
+*[class=grey-text] {
+    font-weight: bold;
+}

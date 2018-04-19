@@ -16,12 +16,16 @@
 <body class="grey darken-4">
 <header></header>
 <main id="app">
-    <div class="row">
-        <div class="input-field col offset-s1 s10 offset-xl2 xl8 card grey lighten-3">
-            <span class="card-title">{{input.title}}</span>
-            <input type="text" :title="input.title" v-model="input.value" @input="update">
-            <span class="counter">{{input.count}}</span>
+    <div class="container">
+        <div class="row">
+            <div class="input-field col s12 card grey lighten-3">
+                <span class="card-title">{{input.title}}</span>
+                <input type="text" :title="input.title" v-model="input.value" @input="update">
+                <span class="counter">{{input.count}}</span>
+            </div>
         </div>
+    </div>
+    <div class="row">
         <div v-for="(v, k) in output" class="col s4">
             <div class="grey-text">{{v.title}}</div>
             <div v-for="(vv, kk) in v.to" class="input-field inline col s12">

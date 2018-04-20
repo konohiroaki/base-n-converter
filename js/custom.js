@@ -62,7 +62,7 @@ var BaseN = {
             b64 = b64.replace(/[-:]/g, "");
             b64 = b64.length % BaseN.b64.chars === 0
                   && b64.match(/^[A-Za-z0-9+\/]+={0,2}$/) !== null ? b64 : "";
-            return BaseN.fixLength(BaseN.toBin(b64.replace(/=/g, ""), BaseN.b64), 8);
+            return BaseN.toBin(b64.replace(/=/g, ""), BaseN.b64);
         }
     },
     b32: {
@@ -72,7 +72,7 @@ var BaseN = {
             b32 = b32.replace(/[-:]/g, "").toUpperCase();
             b32 = b32.length % BaseN.b32.chars === 0
                   && b32.match(/^[A-Z2-7]+={0,6}$/) !== null ? b32 : "";
-            return BaseN.fixLength(BaseN.toBin(b32.replace(/=/g, ""), BaseN.b32), 8);
+            return BaseN.toBin(b32.replace(/=/g, ""), BaseN.b32);
         }
     },
     b16: {
@@ -82,28 +82,26 @@ var BaseN = {
             b16 = b16.replace(/[-:]/g, "").toLowerCase();
             b16 = b16.length % BaseN.b16.chars === 0
                   && b16.match(/^[0-9a-f]+$/) !== null ? b16 : "";
-            return BaseN.fixLength(BaseN.toBin(b16, BaseN.b16), 8);
+            return BaseN.toBin(b16, BaseN.b16);
         }
     },
     bin: {
         list: "01",
-        chars: 1, bits: 1,
-        toBin: function (b2) {
-            b2 = b2.replace(/[-:]/g, "");
-            b2 = b2.match(/^[01]+$/) !== null ? b2 : "";
-            return BaseN.fixLength(b2, 8);
+        chars: 8, bits: 1,
+        toBin: function (bin) {
+            bin = bin.replace(/[-:]/g, "");
+            bin = bin.length % BaseN.bin.chars === 0
+                  && bin.match(/^[01]+$/) !== null ? bin : "";
+            return bin;
         }
     },
     toBin: function (code, n) {
-        var b2 = "";
+        var bin = "";
         for (var i = 0; i < code.length; i++) {
             var tmp = n.list.indexOf(code[i]).toString(2);
-            b2 += (Array(n.bits - 1).fill("0").join("") + tmp).slice(-n.bits);
+            bin += (Array(n.bits - 1).fill("0").join("") + tmp).slice(-n.bits);
         }
-        return b2;
-    },
-    fixLength: function (code, len) {
-        return code.slice(0, code.length - code.length % len);
+        return bin.slice(0, bin.length - bin.length % 8);
     },
     toBaseN: function (code, fromN, toN) {
         var binary = fromN.toBin(code);

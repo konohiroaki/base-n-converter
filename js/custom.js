@@ -1,55 +1,3 @@
-var app = new Vue({
-    el: '#app',
-    data: {
-        input: {title: "Input Here", value: "", count: 0},
-        output: [{
-            title: "As Base64",
-            to: [{title: "to Base32", value: "", count: 0}, {title: "to Base16", value: "", count: 0},
-                {title: "to Binary", value: "", count: 0}]
-        }, {
-            title: "As Base32",
-            to: [{title: "to Base64", value: "", count: 0}, {title: "to Base16", value: "", count: 0},
-                {title: "to Binary", value: "", count: 0}]
-        }, {
-            title: "As Base16",
-            to: [{title: "to Base64", value: "", count: 0}, {title: "to Base32", value: "", count: 0},
-                {title: "to Binary", value: "", count: 0}]
-        }, {
-            title: "As Binary",
-            to: [{title: "to Base64", value: "", count: 0}, {title: "to Base32", value: "", count: 0},
-                {title: "to Base16", value: "", count: 0}]
-        }]
-    },
-    methods: {
-        update: function () {
-            this.output[0].to[0].value = BaseN.toBaseN(this.input.value, BaseN.b64, BaseN.b32);
-            this.output[0].to[1].value = BaseN.toBaseN(this.input.value, BaseN.b64, BaseN.b16);
-            this.output[0].to[2].value = BaseN.toBaseN(this.input.value, BaseN.b64, BaseN.bin);
-            this.output[1].to[0].value = BaseN.toBaseN(this.input.value, BaseN.b32, BaseN.b64);
-            this.output[1].to[1].value = BaseN.toBaseN(this.input.value, BaseN.b32, BaseN.b16);
-            this.output[1].to[2].value = BaseN.toBaseN(this.input.value, BaseN.b32, BaseN.bin);
-            this.output[2].to[0].value = BaseN.toBaseN(this.input.value, BaseN.b16, BaseN.b64);
-            this.output[2].to[1].value = BaseN.toBaseN(this.input.value, BaseN.b16, BaseN.b32);
-            this.output[2].to[2].value = BaseN.toBaseN(this.input.value, BaseN.b16, BaseN.bin);
-            this.output[3].to[0].value = BaseN.toBaseN(this.input.value, BaseN.bin, BaseN.b64);
-            this.output[3].to[1].value = BaseN.toBaseN(this.input.value, BaseN.bin, BaseN.b32);
-            this.output[3].to[2].value = BaseN.toBaseN(this.input.value, BaseN.bin, BaseN.b16);
-            CharCounter.updateCounter();
-        }
-    }
-});
-
-var CharCounter = {
-    updateCounter: function () {
-        app.input.count = app.input.value.length;
-        app.output.forEach(function (e) {
-            e.to.forEach(function (ee) {
-                ee.count = ee.value.length;
-            });
-        });
-    }
-};
-
 /**
  * https://tools.ietf.org/html/rfc4648
  */
@@ -58,40 +6,44 @@ var BaseN = {
     b64: {
         list: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
         chars: 4, bits: 6,
+        regex: /^[A-Za-z0-9+\/]+={0,2}$/,
         toBin: function (b64) {
             b64 = b64.replace(/[-:]/g, "");
             b64 = b64.length % BaseN.b64.chars === 0
-                  && b64.match(/^[A-Za-z0-9+\/]+={0,2}$/) !== null ? b64 : "";
+                  && b64.match(BaseN.b64.regex) !== null ? b64 : "";
             return BaseN.toBin(b64.replace(/=/g, ""), BaseN.b64);
         }
     },
     b32: {
         list: "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
         chars: 8, bits: 5,
+        regex: /^[A-Z2-7]+={0,6}$/,
         toBin: function (b32) {
             b32 = b32.replace(/[-:]/g, "").toUpperCase();
             b32 = b32.length % BaseN.b32.chars === 0
-                  && b32.match(/^[A-Z2-7]+={0,6}$/) !== null ? b32 : "";
+                  && b32.match(BaseN.b32.regex) !== null ? b32 : "";
             return BaseN.toBin(b32.replace(/=/g, ""), BaseN.b32);
         }
     },
     b16: {
         list: "0123456789abcdef",
         chars: 2, bits: 4,
+        regex: /^[0-9a-f]+$/,
         toBin: function (b16) {
             b16 = b16.replace(/[-:]/g, "").toLowerCase();
             b16 = b16.length % BaseN.b16.chars === 0
-                  && b16.match(/^[0-9a-f]+$/) !== null ? b16 : "";
+                  && b16.match(BaseN.b16.regex) !== null ? b16 : "";
             return BaseN.toBin(b16, BaseN.b16);
         }
     },
     bin: {
         list: "01",
         chars: 8, bits: 1,
+        regex: /^[01]+$/,
         toBin: function (bin) {
             bin = bin.replace(/[-:]/g, "");
             bin = bin.length % BaseN.bin.chars === 0
-                  && bin.match(/^[01]+$/) !== null ? bin : "";
+                  && bin.match(BaseN.bin.regex) !== null ? bin : "";
             return bin;
         }
     },
@@ -127,3 +79,67 @@ var BaseN = {
         return baseN;
     }
 };
+
+var app = new Vue({
+    el: '#app',
+    data: {
+        input: {title: "Input Here", value: "", count: 0},
+        output: [{
+            title: "As Base64",
+            in_length: BaseN.b64.chars,
+            in_regex: BaseN.b64.regex,
+            to: [{title: "to Base32", value: "", count: 0}, {title: "to Base16", value: "", count: 0},
+                {title: "to Binary", value: "", count: 0}]
+        }, {
+            title: "As Base32",
+            in_length: BaseN.b32.chars,
+            in_regex: BaseN.b32.regex,
+            to: [{title: "to Base64", value: "", count: 0}, {title: "to Base16", value: "", count: 0},
+                {title: "to Binary", value: "", count: 0}]
+        }, {
+            title: "As Base16",
+            in_length: BaseN.b16.chars,
+            in_regex: BaseN.b16.regex,
+            to: [{title: "to Base64", value: "", count: 0}, {title: "to Base32", value: "", count: 0},
+                {title: "to Binary", value: "", count: 0}]
+        }, {
+            title: "As Binary",
+            in_length: BaseN.bin.chars,
+            in_regex: BaseN.bin.regex,
+            to: [{title: "to Base64", value: "", count: 0}, {title: "to Base32", value: "", count: 0},
+                {title: "to Base16", value: "", count: 0}]
+        }]
+    },
+    methods: {
+        update: function () {
+            this.output[0].to[0].value = BaseN.toBaseN(this.input.value, BaseN.b64, BaseN.b32);
+            this.output[0].to[1].value = BaseN.toBaseN(this.input.value, BaseN.b64, BaseN.b16);
+            this.output[0].to[2].value = BaseN.toBaseN(this.input.value, BaseN.b64, BaseN.bin);
+            this.output[1].to[0].value = BaseN.toBaseN(this.input.value, BaseN.b32, BaseN.b64);
+            this.output[1].to[1].value = BaseN.toBaseN(this.input.value, BaseN.b32, BaseN.b16);
+            this.output[1].to[2].value = BaseN.toBaseN(this.input.value, BaseN.b32, BaseN.bin);
+            this.output[2].to[0].value = BaseN.toBaseN(this.input.value, BaseN.b16, BaseN.b64);
+            this.output[2].to[1].value = BaseN.toBaseN(this.input.value, BaseN.b16, BaseN.b32);
+            this.output[2].to[2].value = BaseN.toBaseN(this.input.value, BaseN.b16, BaseN.bin);
+            this.output[3].to[0].value = BaseN.toBaseN(this.input.value, BaseN.bin, BaseN.b64);
+            this.output[3].to[1].value = BaseN.toBaseN(this.input.value, BaseN.bin, BaseN.b32);
+            this.output[3].to[2].value = BaseN.toBaseN(this.input.value, BaseN.bin, BaseN.b16);
+            CharCounter.updateCounter();
+        }
+    }
+});
+
+var CharCounter = {
+    updateCounter: function () {
+        app.input.count = app.input.value.length;
+        app.output.forEach(function (e) {
+            e.to.forEach(function (ee) {
+                ee.count = ee.value.length;
+            });
+        });
+    }
+};
+
+var ToolTip = M.Tooltip.init($(".tooltipped"), {
+    position: "bottom"
+});

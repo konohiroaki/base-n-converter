@@ -34,7 +34,10 @@
     <div class="row">
         <div v-for="(v, k) in output"
              :class="'col s' + (output.length > 4 ? 3 : Math.floor(12 / output.length))">
-            <h6 class="grey-text">{{v.title}}</h6>
+            <h6 class="grey-text tooltipped" :data-tooltip=
+                    "'<strong>Expected input format</strong><br><mono>- Length: ' + v.in_length + ' x N<br>- RegEx : ' + v.in_regex + '</mono>'">
+                {{v.title}}
+            </h6>
             <div v-for="(vv, kk) in v.to" class="input-field inline col s12">
                 <span class="grey-text">{{vv.title}}</span>
                 <input type="text" :title="vv.title" v-model="vv.value" readonly>

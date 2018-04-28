@@ -13,10 +13,15 @@ footer i {
     font-size: 13px;
 }
 
-.input-field input {
+.input-field input,
+mono {
     font-family: "Courier New", monospace;
 }
 
-*[class=grey-text] {
+*[class*=grey-text] {
     font-weight: bold;
+}
+
+.material-tooltip {
+    text-align: inherit;
 }

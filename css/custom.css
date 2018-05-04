@@ -25,3 +25,8 @@ mono {
 .material-tooltip {
     text-align: inherit;
 }
+
+.brand-logo {
+    font-family: 'Skranji', cursive;
+    margin-left: 0.5em;
+}
